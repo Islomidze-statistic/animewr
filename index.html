@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ANIME夢 — Anime Streaming</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: "#050607",
+            panel: "#0b0d10",
+            panel2: "#111419",
+            line: "#242830",
+            accent: "#e83b55",
+            accent2: "#ff6a7d",
+            muted: "#8d949f"
+          },
+          boxShadow: {
+            glow: "0 0 35px rgba(232,59,85,.16)",
+            card: "0 10px 35px rgba(0,0,0,.45)"
+          },
+          animation: {
+            float: "float 5s ease-in-out infinite",
+            pulseSoft: "pulseSoft 2.4s ease-in-out infinite",
+            shine: "shine 2.5s linear infinite"
+          },
+          keyframes: {
+            float: {
+              "0%,100%": { transform: "translateY(0)" },
+              "50%": { transform: "translateY(-8px)" }
+            },
+            pulseSoft: {
+              "0%,100%": { opacity: ".65" },
+              "50%": { opacity: "1" }
+            },
+            shine: {
+              "0%": { transform: "translateX(-120%)" },
+              "100%": { transform: "translateX(120%)" }
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Lucide icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    html { scroll-behavior: smooth; }
+    body {
+      background:
+        radial-gradient(circle at 75% 5%, rgba(232,59,85,.09), transparent 25%),
+        radial-gradient(circle at 15% 70%, rgba(80,90,110,.07), transparent 25%),
+        #050607;
+      color: #f4f5f7;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    ::selection { background: rgba(232,59,85,.35); }
+    ::-webkit-scrollbar { width: 9px; }
+    ::-webkit-scrollbar-track { background: #050607; }
+    ::-webkit-scrollbar-thumb { background: #2b2f37; border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: #e83b55; }
+
+    .glass {
+      background: rgba(10,12,15,.72);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .grid-bg {
+      background-image:
+        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+
+    .hero-fade {
+      background:
+        linear-gradient(90deg, #050607 0%, rgba(5,6,7,.82) 25%, rgba(5,6,7,.25) 65%, #050607 100%),
+        linear-gradient(0deg, #050607 0%, transparent 35%);
+    }
+
+    .poster {
+      transition: transform .3s ease, filter .3s ease, box-shadow .3s ease;
+    }
+    .poster:hover {
+      transform: translateY(-6px) scale(1.025);
+      filter: brightness(1.08);
+      box-shadow: 0 18px 38px rgba(0,0,0,.5);
+    }
+
+    .nav-link.active {
+      color: white;
+      background: rgba(232,59,85,.13);
+      border-color: rgba(232,59,85,.28);
+    }
+
+    .page { display: none; }
+    .page.active { display: block; animation: pageIn .35s ease both; }
+    @keyframes pageIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal { display:none; }
+    .modal.open { display:flex; animation: fadeIn .2s ease both; }
+    @keyframes fadeIn { from {opacity:0} to {opacity:1} }
+
+    .toast {
+      transform: translateY(25px);
+      opacity: 0;
+      pointer-events: none;
+      transition: .25s ease;
+    }
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .shine::after {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 -80%;
+      width: 45%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent);
+      transform: skewX(-20deg);
+    }
+  </style>
+</head>
+
+<body class="min-h-screen">
+  <!-- Mobile overlay -->
+  <div id="mobileOverlay" class="fixed inset-0 z-40 bg-black/70 hidden lg:hidden"></div>
+
+  <!-- Sidebar -->
+  <aside id="sidebar"
+    class="fixed z-50 left-0 top-0 h-screen w-[270px] border-r border-white/10 bg-[#07090b]/95 backdrop-blur-xl
+           -translate-x-full lg:translate-x-0 transition-transform duration-300">
+    <div class="h-full flex flex-col">
+      <div class="px-5 py-5 border-b border-white/10">
+        <button onclick="go('home')" class="flex items-center gap-3 text-left">
+          <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-white via-zinc-300 to-zinc-700 text-black flex items-center justify-center font-black text-lg shadow-glow">
+            夢
+          </div>
+          <div>
+            <div class="font-black tracking-tight text-lg">ANIME<span class="text-accent">夢</span></div>
+            <div class="text-[10px] uppercase tracking-[.25em] text-zinc-500">Watch. Dream. Live.</div>
+          </div>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto px-3 py-4 space-y-5">
+        <section>
+          <div class="px-3 mb-2 text-[10px] uppercase tracking-[.22em] text-zinc-600">Главное меню</div>
+          <nav class="space-y-1">
+            <button class="nav-link active w-full flex items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-sm text-zinc-400 hover:text-white hover:bg-white/5" data-page="home" onclick="go('home')">
+              <i data-lucide="home" class="w-4 h-4"></i> Главная
+            </button>
+            <button class="nav-link w-full flex items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-sm text-zinc-400 hover:text-white hover:bg-white/5" data-page="catalog" onclick="go('catalog')">
+              <i data-lucide="layout-grid" class="w-4 h-4"></i> Каталог
+            </button>
+            <button class="nav-link w-full flex items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-sm text-zinc-400 hover:text-white hover:bg-white/5" data-page="ongoing" onclick="go('ongoing')">
+              <i data-lucide="play-circle" class="w-4 h-4"></i> Онгоинги
+            </button>
+            <button class="nav-link w-full flex items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-sm text-zinc-400 hover:text-white hover:bg-white/5" data-page="favorites" onclick="go('favorites')">
+              <i data-lucide="heart" class="w-4 h-4"></i> Избранное
+            </button>
+            <button class="nav-link w-full flex items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-sm text-zinc-400 hover:text-white hover:bg-white/5" data-page="random" onclick="randomAnime()">
+              <i data-lucide="shuffle" class="w-4 h-4"></i> Случайное аниме
+            </button>
+          </nav>
+        </section>
+
+        <section>
+          <div class="px-3 mb-2 text-[10px] uppercase tracking-[.22em] text-zinc-600">Жанры</div>
+          <div id="genreList" class="grid grid-cols-1 gap-1">
+            <button onclick="filterGenre('Экшен')" class="genre-btn">⚔️ <span>Экшен</span></button>
+            <button onclick="filterGenre('Приключения')" class="genre-btn">🧭 <span>Приключения</span></button>
+            <button onclick="filterGenre('Комедия')" class="genre-btn">😂 <span>Комедия</span></button>
+            <button onclick="filterGenre('Драма')" class="genre-btn">🎭 <span>Драма</span></button>
+            <button onclick="filterGenre('Фэнтези')" class="genre-btn">✨ <span>Фэнтези</span></button>
+            <button onclick="filterGenre('Романтика')" class="genre-btn">💗 <span>Романтика</span></button>
+            <button onclick="filterGenre('Ужасы')" class="genre-btn">👻 <span>Ужасы</span></button>
+            <button onclick="filterGenre('Сёнен')" class="genre-btn">🔥 <span>Сёнен</span></button>
+            <button onclick="filterGenre('Сейнен')" class="genre-btn">🗡️ <span>Сейнен</span></button>
+            <button onclick="filterGenre('Повседневность')" class="genre-btn">☕ <span>Повседневность</span></button>
+            <button onclick="filterGenre('Киберпанк')" class="genre-btn">🤖 <span>Киберпанк</span></button>
+            <button onclick="filterGenre('Исторический')" class="genre-btn">🏯 <span>Исторический</span></button>
+            <button onclick="filterGenre('Мистика')" class="genre-btn">🌙 <span>Мистика</span></button>
+          </div>
+        </section>
+
+        <section class="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[.06] to-transparent p-4">
+          <div class="flex items-center gap-2 text-sm font-semibold">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            Сервер работает
+          </div>
+          <p class="text-xs text-zinc-500 mt-2">Смотри любимые тайтлы без лишних переходов.</p>
+        </section>
+      </div>
+
+      <div class="p-3 border-t border-white/10">
+        <button onclick="go('settings')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-zinc-400 hover:bg-white/5 hover:text-white">
+          <i data-lucide="settings" class="w-4 h-4"></i> Настройки
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Header -->
+  <header class="fixed z-30 top-0 left-0 lg:left-[270px] right-0 h-[72px] border-b border-white/10 bg-[#050607]/80 backdrop-blur-xl">
+    <div class="h-full px-4 sm:px-6 flex items-center gap-3">
+      <button id="menuBtn" onclick="toggleSidebar()" class="lg:hidden w-10 h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center">
+        <i data-lucide="menu" class="w-5 h-5"></i>
+      </button>
+
+      <button onclick="go('home')" class="lg:hidden font-black text-lg mr-1">ANIME<span class="text-accent">夢</span></button>
+
+      <div class="hidden md:flex items-center gap-2 text-xs text-zinc-500 mr-auto">
+        <span>Главная</span><span>/</span><span id="breadcrumb" class="text-zinc-300">Популярное</span>
+      </div>
+
+      <div class="relative w-full max-w-md ml-auto">
+        <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500"></i>
+        <input id="searchInput" oninput="searchAnime(this.value)"
+          class="w-full h-10 rounded-xl border border-white/10 bg-white/[.04] pl-10 pr-4 text-sm outline-none focus:border-accent/60 focus:ring-2 focus:ring-accent/10 placeholder:text-zinc-600"
+          placeholder="Поиск аниме..." />
+        <div id="searchResults" class="hidden absolute top-12 left-0 right-0 rounded-2xl border border-white/10 bg-[#0c0f12]/98 backdrop-blur-xl p-2 shadow-2xl"></div>
+      </div>
+
+      <button onclick="showToast('Уведомлений пока нет')" class="hidden sm:flex w-10 h-10 rounded-xl border border-white/10 bg-white/5 items-center justify-center text-zinc-400 hover:text-white">
+        <i data-lucide="bell" class="w-4 h-4"></i>
+      </button>
+
+      <button onclick="go('profile')" class="flex items-center gap-2 pl-1">
+        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-zinc-300 to-zinc-700 ring-2 ring-white/10 flex items-center justify-center text-black font-bold text-xs">IS</div>
+        <div class="hidden xl:block text-left">
+          <div class="text-xs font-semibold">Islomidze</div>
+          <div class="text-[10px] text-zinc-500">Профиль</div>
+        </div>
+      </button>
+    </div>
+  </header>
+
+  <main class="lg:ml-[270px] pt-[72px] min-h-screen">
+    <!-- HOME -->
+    <section id="page-home" class="page active">
+      <div class="relative min-h-[470px] overflow-hidden">
+        <img src="https://cdn.myanimelist.net/images/anime/1498/134180l.jpg"
+             class="absolute inset-0 w-full h-full object-cover object-center opacity-55" alt="Tokyo Ghoul" />
+        <div class="absolute inset-0 hero-fade"></div>
+
+        <div class="relative max-w-[1500px] mx-auto px-5 sm:px-8 py-12 lg:py-20 min-h-[470px] flex items-end">
+          <div class="max-w-2xl">
+            <div class="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-[11px] text-accent2 mb-5">
+              <span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span>
+              HERO / FEATURED ANIME
+            </div>
+            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight">Токийский гуль</h1>
+            <p class="mt-4 max-w-xl text-sm sm:text-base leading-7 text-zinc-300">
+              Канеки Кэн — обычный студент, чья жизнь меняется после встречи с гулем.
+              Теперь он живёт между двумя мирами и пытается понять, кем ему стать.
+            </p>
+
+            <div class="flex flex-wrap items-center gap-3 mt-5 text-xs">
+              <span class="text-yellow-400">★ 8.1/10</span>
+              <span class="text-zinc-500">2014</span>
+              <span class="rounded bg-white/10 px-2 py-1">12+</span>
+              <span class="text-zinc-400">Сёнен</span>
+              <span class="text-zinc-400">Ужасы</span>
+              <span class="text-zinc-400">Драма</span>
+            </div>
+
+            <div class="flex flex-wrap gap-3 mt-6">
+              <button onclick="openAnime('Токийский гуль')" class="px-6 py-3 rounded-xl bg-white text-black font-bold text-sm hover:bg-zinc-200 transition flex items-center gap-2">
+                <i data-lucide="play" class="w-4 h-4 fill-current"></i> Смотреть
+              </button>
+              <button onclick="toggleFavorite('Токийский гуль')" class="px-4 py-3 rounded-xl border border-white/15 bg-black/30 backdrop-blur text-white hover:bg-white/10 transition">
+                <i data-lucide="plus" class="w-5 h-5"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="max-w-[1500px] mx-auto px-5 sm:px-8 py-8 space-y-10">
+        <section>
+          <div class="flex items-end justify-between mb-4">
+            <div>
+              <div class="text-[10px] uppercase tracking-[.25em] text-zinc-600">POPULAR ANIME</div>
+              <h2 class="text-2xl font-black mt-1">Популярное</h2>
+            </div>
+            <button onclick="go('catalog')" class="text-xs text-zinc-400 hover:text-white flex items-center gap-1">Смотреть все <i data-lucide="arrow-right" class="w-3 h-3"></i></button>
+          </div>
+          <div id="popularGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3"></div>
+        </section>
+
+        <section>
+          <div class="flex items-end justify-between mb-4">
+            <div>
+              <div class="text-[10px] uppercase tracking-[.25em] text-zinc-600">NEW RELEASES</div>
+              <h2 class="text-2xl font-black mt-1">Новинки</h2>
+            </div>
+            <button onclick="go('ongoing')" class="text-xs text-zinc-400 hover:text-white flex items-center gap-1">Смотреть все <i data-lucide="arrow-right" class="w-3 h-3"></i></button>
+          </div>
+          <div id="newGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3"></div>
+        </section>
+      </div>
+    </section>
+
+    <!-- CATALOG -->
+    <section id="page-catalog" class="page">
+      <div class="max-w-[1500px] mx-auto px-5 sm:px-8 py-8">
+        <div class="mb-7">
+          <div class="text-[10px] uppercase tracking-[.25em] text-zinc-600">ANIME PAGE</div>
+          <h1 class="text-4xl font-black mt-1">Каталог</h1>
+          <p class="text-sm text-zinc-500 mt-2">Фильтруй тайтлы по жанрам, рейтингу и формату.</p>
+        </div>
+
+        <div class="grid lg:grid-cols-[230px_1fr] gap-5">
+          <aside class="rounded-2xl border border-white/10 bg-panel p-4 h-fit lg:sticky lg:top-24">
+            <div class="font-bold mb-3">Фильтры</div>
+            <label class="text-xs text-zinc-500">Поиск</label>
+            <input id="catalogSearch" oninput="renderCatalog()" class="mt-1 w-full h-10 rounded-xl border border-white/10 bg-white/5 px-3 text-sm outline-none focus:border-accent/50" placeholder="Название..." />
+            <label class="text-xs text-zinc-500 block mt-4">Жанр</label>
+            <select id="genreSelect" onchange="renderCatalog()" class="mt-1 w-full h-10 rounded-xl border border-white/10 bg-white/5 px-3 text-sm outline-none">
+              <option value="">Все жанры</option>
+              <option>Экшен</option><option>Приключения</option><option>Комедия</option><option>Драма</option>
+              <option>Фэнтези</option><option>Романтика</option><option>Ужасы</option><option>Сёнен</option>
+              <option>Сейнен</option><option>Мистика</option>
+            </select>
+            <label class="text-xs text-zinc-500 block mt-4">Сортировка</label>
+            <select id="sortSelect" onchange="renderCatalog()" class="mt-1 w-full h-10 rounded-xl border border-white/10 bg-white/5 px-3 text-sm outline-none">
+              <option value="rating">Рейтинг</option>
+              <option value="name">Название</option>
+              <option value="year">Год</option>
+            </select>
+            <button onclick="clearFilters()" class="w-full mt-4 h-10 rounded-xl border border-white/10 text-xs text-zinc-400 hover:text-white hover:bg-white/5">Сбросить</button>
+          </aside>
+
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span id="catalogCount" class="text-xs text-zinc-500"></span>
+              <div class="text-xs text-zinc-500">Карточки • 2–6 в ряд</div>
+            </div>
+            <div id="catalogGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ONGOING -->
+    <section id="page-ongoing" class="page">
+      <div class="max-w-[1500px] mx-auto px-5 sm:px-8 py-8">
+        <div class="mb-7">
+          <div class="text-[10px] uppercase tracking-[.25em] text-zinc-600">CURRENT SEASON</div>
+          <h1 class="text-4xl font-black mt-1">Онгоинги</h1>
+          <p class="text-sm text-zinc-500 mt-2">Аниме, которые выходят прямо сейчас.</p>
+        </div>
+        <div id="ongoingGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-4"></div>
+      </div>
+    </section>
+
+    <!-- FAVORITES -->
+    <section id="page-favorites" class="page">
+      <div class="max-w-[1500px] mx-auto px-5 sm:px-8 py-8">
+        <div class="mb-7">
+          <div class="text-[10px] uppercase tracking-[.25em] text-zinc-600">MY LIBRARY</div>
+          <h1 class="text-4xl font-black mt-1">Избранное</h1>
+          <p class="text-sm text-zinc-500 mt-2">Твои сохранённые аниме.</p>
+        </div>
+        <div id="favoritesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-4"></div>
+      </div>
+    </section>
+
+    <!-- PROFILE -->
+    <section id="page-profile" class="page">
+      <div class="max-w-[1200px] mx-auto px-5 sm:px-8 py-8">
+        <div class="relative overflow-hidden rounded-3xl border border-white/10 bg-panel">
+          <div class="h-40 bg-gradient-to-r from-zinc-900 via-[#15171b] to-[#241015]"></div>
+          <div class="p-6 -mt-12">
+            <div class="flex flex-col sm:flex-row sm:items-end gap-4">
+              <div class="w-24 h-24 rounded-3xl bg-gradient-to-br from-zinc-200 to-zinc-700 border-4 border-[#0b0d10] flex items-center justify-center text-black text-xl font-black">IS</div>
+              <div class="flex-1">
+                <div class="text-2xl font-black">Islomidze</div>
+                <div class="text-sm text-zinc-500">Участник ANIME夢</div>
+              </div>
+              <button onclick="go('settings')" class="px-4 py-2 rounded-xl border border-white/10 bg-white/5 text-sm hover:bg-white/10">Настроить профиль</button>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 mt-7">
+              <div class="rounded-2xl border border-white/10 bg-white/[.03] p-4 text-center">
+                <div id="profileAnimeCount" class="text-2xl font-black">0</div><div class="text-xs text-zinc-500">Аниме</div>
+              </div>
+              <div class="rounded-2xl border border-white/10 bg-white/[.03] p-4 text-center">
+                <div class="text-2xl font-black">8</div><div class="text-xs text-zinc-500">Отзывов</div>
+              </div>
+              <div class="rounded-2xl border border-white/10 bg-white/[.03] p-4 text-center">
+                <div class="text-2xl font-black">132</div><div class="text-xs text-zinc-500">Серий</div>
+              </div>
+            </div>
+
+            <div class="mt-8">
+              <h2 class="font-bold text-lg mb-4">Мои аниме</h2>
+              <div id="profileGrid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="page-settings" class="page">
+      <div class="max-w-[900px] mx-auto px-5 sm:px-8 py-8">
+        <div class="mb-7">
+          <div class="text-[10px] uppercase tracking-[.25em] text-zinc-600">SETTINGS</div>
+          <h1 class="text-4xl font-black mt-1">Настройки</h1>
+        </div>
+
+        <div class="space-y-4">
+          <div class="rounded-2xl border border-white/10 bg-panel p-5">
+            <h2 class="font-bold">Интерфейс</h2>
+            <div class="mt-4 space-y-3">
+              <label class="flex items-center justify-between gap-4 p-3 rounded-xl hover:bg-white/5">
+                <div><div class="text-sm">Анимации интерфейса</div><div class="text-xs text-zinc-500">Плавные переходы и эффекты.</div></div>
+                <input type="checkbox" checked class="accent-[#e83b55] w-4 h-4">
+              </label>
+              <label class="flex items-center justify-between gap-4 p-3 rounded-xl hover:bg-white/5">
+                <div><div class="text-sm">Автовоспроизведение</div><div class="text-xs text-zinc-500">Запуск следующей серии.</div></div>
+                <input type="checkbox" class="accent-[#e83b55] w-4 h-4">
+              </label>
+            </div>
+          </div>
+
+          <div class="rounded-2xl border border-white/10 bg-panel p-5">
+            <h2 class="font-bold">Профиль</h2>
+            <div class="grid sm:grid-cols-2 gap-4 mt-4">
+              <input class="h-11 rounded-xl border border-white/10 bg-white/5 px-3 text-sm" value="Islomidze" />
+              <input class="h-11 rounded-xl border border-white/10 bg-white/5 px-3 text-sm" value="islam@example.com" />
+            </div>
+            <button onclick="showToast('Настройки сохранены')" class="mt-4 px-5 py-2.5 rounded-xl bg-white text-black text-sm font-bold">Сохранить</button>
+          </div>
+
+          <div class="rounded-2xl border border-red-500/15 bg-red-500/[.04] p-5">
+            <h2 class="font-bold text-red-300">Сессия</h2>
+            <button onclick="showToast('Демо-режим: выход недоступен')" class="mt-4 px-4 py-2 rounded-xl border border-red-400/20 text-sm text-red-300 hover:bg-red-500/10">Выйти</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="border-t border-white/10 mt-10">
+      <div class="max-w-[1500px] mx-auto px-5 sm:px-8 py-7 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-600">
+        <div>© 2026 ANIME夢. Все права защищены.</div>
+        <div class="flex items-center gap-4">
+          <a href="#" onclick="event.preventDefault();showToast('Discord')" class="hover:text-white">Discord</a>
+          <a href="#" onclick="event.preventDefault();showToast('Telegram')" class="hover:text-white">Telegram</a>
+          <a href="#" onclick="event.preventDefault();showToast('YouTube')" class="hover:text-white">YouTube</a>
+          <a href="#" onclick="event.preventDefault();showToast('VK')" class="hover:text-white">VK</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <!-- Anime modal -->
+  <div id="animeModal" class="modal fixed inset-0 z-[80] items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-4xl max-h-[90vh] overflow-auto rounded-3xl border border-white/10 bg-[#090b0e] shadow-2xl">
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast fixed z-[100] bottom-5 right-5 rounded-xl border border-white/10 bg-[#101317] px-4 py-3 text-sm shadow-2xl"></div>
+
+  <style>
+    .genre-btn {
+      display:flex; align-items:center; gap:.65rem; width:100%;
+      padding:.48rem .75rem; border-radius:.7rem;
+      color:#8d949f; font-size:.78rem; text-align:left;
+      transition:.2s;
+    }
+    .genre-btn:hover { color:#fff; background:rgba(255,255,255,.05); }
+  </style>
+
+  <script>
+    const anime = [
+      {title:"Наруто", year:2002, rating:8.3, episodes:720, genres:["Экшен","Приключения","Сёнен"], image:"https://cdn.myanimelist.net/images/anime/13/17405l.jpg", desc:"История Наруто Удзумаке — юного ниндзя, который мечтает стать Хокаге.", ongoing:false},
+      {title:"Ван Пис", year:1999, rating:8.8, episodes:1120, genres:["Экшен","Приключения","Комедия","Сёнен"], image:"https://cdn.myanimelist.net/images/anime/6/73245l.jpg", desc:"Монки Д. Луффи отправляется в море на поиски легендарного сокровища One Piece.", ongoing:true},
+      {title:"Магическая битва", year:2020, rating:8.6, episodes:24, genres:["Экшен","Фэнтези","Сёнен"], image:"https://cdn.myanimelist.net/images/anime/1171/109222l.jpg", desc:"Юдзи Итадори оказывается втянут в мир проклятий и колдунов.", ongoing:false},
+      {title:"Клинок, рассекающий демонов", year:2019, rating:8.7, episodes:55, genres:["Экшен","Фэнтези","Сёнен"], image:"https://cdn.myanimelist.net/images/anime/1286/99889l.jpg", desc:"Тандзиро отправляется в путь, чтобы вернуть сестре человеческий облик.", ongoing:true},
+      {title:"Атака титанов", year:2013, rating:9.1, episodes:87, genres:["Экшен","Драма","Ужасы"], image:"https://cdn.myanimelist.net/images/anime/10/47347l.jpg", desc:"Люди живут за стенами, защищаясь от загадочных титанов.", ongoing:false},
+      {title:"Семья шпиона", year:2022, rating:8.2, episodes:37, genres:["Комедия","Экшен","Романтика"], image:"https://cdn.myanimelist.net/images/anime/1441/122795l.jpg", desc:"Шпион, убийца и телепат создают необычную семью.", ongoing:true},
+      {title:"Дандадан", year:2024, rating:8.6, episodes:24, genres:["Экшен","Комедия","Мистика"], image:"https://cdn.myanimelist.net/images/anime/1477/145392l.jpg", desc:"Момо и Окарун спорят о призраках и пришельцах, пока сами не сталкиваются с ними.", ongoing:true},
+      {title:"Реинкарнация безработного", year:2021, rating:8.4, episodes:48, genres:["Фэнтези","Приключения","Драма"], image:"https://cdn.myanimelist.net/images/anime/1015/117787l.jpg", desc:"Мужчина получает шанс начать новую жизнь в мире магии.", ongoing:false},
+      {title:"Магия и мускулы", year:2023, rating:8.0, episodes:24, genres:["Комедия","Экшен","Фэнтези"], image:"https://cdn.myanimelist.net/images/anime/1219/134808l.jpg", desc:"В мире магии парень без магических способностей полагается только на силу.", ongoing:false},
+      {title:"Клинок №3", year:2024, rating:7.9, episodes:12, genres:["Экшен","Фэнтези"], image:"https://cdn.myanimelist.net/images/anime/1221/138766l.jpg", desc:"Новый герой вступает в опасную битву.", ongoing:true},
+      {title:"Токийский гуль", year:2014, rating:8.1, episodes:12, genres:["Сёнен","Ужасы","Драма"], image:"https://cdn.myanimelist.net/images/anime/1498/134180l.jpg", desc:"Канеки Кэн — студент, который после страшной встречи оказывается между миром людей и гулей.", ongoing:false},
+      {title:"Блич", year:2004, rating:8.2, episodes:366, genres:["Экшен","Сёнен","Мистика"], image:"https://cdn.myanimelist.net/images/anime/3/40451l.jpg", desc:"Ичиго получает силу проводника душ и начинает защищать людей.", ongoing:false},
+      {title:"Моя геройская академия", year:2016, rating:8.0, episodes:159, genres:["Экшен","Сёнен","Школа"], image:"https://cdn.myanimelist.net/images/anime/10/78745l.jpg", desc:"Мир, где почти каждый обладает сверхспособностями.", ongoing:true},
+      {title:"Хантер x Хантер", year:2011, rating:9.0, episodes:148, genres:["Приключения","Экшен","Сёнен"], image:"https://cdn.myanimelist.net/images/anime/1337/99013l.jpg", desc:"Гон отправляется сдавать экзамен охотников и искать своего отца.", ongoing:false},
+      {title:"Доктор Стоун", year:2019, rating:8.1, episodes:57, genres:["Приключения","Фантастика"], image:"https://cdn.myanimelist.net/images/anime/1613/102576l.jpg", desc:"Человечество окаменело, а юный учёный пытается восстановить цивилизацию.", ongoing:false},
+      {title:"Поднятие уровня в одиночку", year:2024, rating:8.8, episodes:25, genres:["Экшен","Фэнтези"], image:"https://cdn.myanimelist.net/images/anime/1809/140311l.jpg", desc:"Слабейший охотник получает загадочную систему развития.", ongoing:true}
+    ];
+
+    let favorites = JSON.parse(localStorage.getItem("animeFavorites") || "[]");
+
+    function init() {
+      lucide.createIcons();
+      renderHome();
+      renderCatalog();
+      renderOngoing();
+      renderFavorites();
+      updateProfile();
+    }
+
+    function card(a) {
+      const fav = favorites.includes(a.title);
+      return `
+        <article class="group min-w-0 cursor-pointer" onclick="openAnime('${escapeQuotes(a.title)}')">
+          <div class="relative aspect-[3/4] rounded-2xl overflow-hidden bg-panel border border-white/10 poster">
+            <img src="${a.image}" loading="lazy" onerror="this.src='https://placehold.co/600x800/111419/ffffff?text=ANIME'" class="w-full h-full object-cover" alt="${a.title}">
+            <div class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+            <div class="absolute top-2 left-2 flex gap-1">
+              <span class="rounded-md bg-black/70 backdrop-blur px-1.5 py-1 text-[10px] font-semibold">${a.year}</span>
+            </div>
+            <button onclick="event.stopPropagation();toggleFavorite('${escapeQuotes(a.title)}')" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 backdrop-blur flex items-center justify-center ${fav ? 'text-accent' : 'text-white'} hover:bg-black/80">
+              <i data-lucide="${fav ? 'heart' : 'heart'}" class="w-4 h-4 ${fav ? 'fill-current' : ''}"></i>
+            </button>
+            <div class="absolute left-3 right-3 bottom-3">
+              <div class="font-bold text-sm leading-tight line-clamp-2">${a.title}</div>
+              <div class="flex items-center justify-between mt-1 text-[10px] text-zinc-300">
+                <span class="text-yellow-400">★ ${a.rating}</span>
+                <span>${a.episodes} серий</span>
+              </div>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderHome() {
+      document.getElementById("popularGrid").innerHTML = anime.slice(0,6).map(card).join("");
+      document.getElementById("newGrid").innerHTML = anime.slice(6,12).map(card).join("");
+      lucide.createIcons();
+    }
+
+    function renderOngoing() {
+      const list = anime.filter(a => a.ongoing);
+      document.getElementById("ongoingGrid").innerHTML = list.map(card).join("");
+      lucide.createIcons();
+    }
+
+    function renderFavorites() {
+      const list = anime.filter(a => favorites.includes(a.title));
+      document.getElementById("favoritesGrid").innerHTML = list.length
+        ? list.map(card).join("")
+        : `<div class="col-span-full rounded-2xl border border-dashed border-white/10 p-10 text-center text-zinc-500">
+             <i data-lucide="heart" class="w-8 h-8 mx-auto mb-3"></i>
+             <div class="text-sm">Здесь пока пусто</div>
+             <button onclick="go('catalog')" class="mt-4 px-4 py-2 rounded-xl bg-white text-black text-xs font-bold">Открыть каталог</button>
+           </div>`;
+      lucide.createIcons();
+    }
+
+    function renderCatalog() {
+      const q = (document.getElementById("catalogSearch")?.value || "").toLowerCase();
+      const genre = document.getElementById("genreSelect")?.value || "";
+      const sort = document.getElementById("sortSelect")?.value || "rating";
+
+      let list = anime.filter(a =>
+        (!q || a.title.toLowerCase().includes(q)) &&
+        (!genre || a.genres.includes(genre))
+      );
+
+      if (sort === "rating") list.sort((a,b) => b.rating-a.rating);
+      if (sort === "name") list.sort((a,b) => a.title.localeCompare(b.title));
+      if (sort === "year") list.sort((a,b) => b.year-a.year);
+
+      document.getElementById("catalogCount").textContent = `${list.length} тайтлов`;
+      document.getElementById("catalogGrid").innerHTML = list.map(card).join("");
+      lucide.createIcons();
+    }
+
+    function clearFilters() {
+      document.getElementById("catalogSearch").value = "";
+      document.getElementById("genreSelect").value = "";
+      document.getElementById("sortSelect").value = "rating";
+      renderCatalog();
+    }
+
+    function filterGenre(genre) {
+      go("catalog");
+      setTimeout(() => {
+        document.getElementById("genreSelect").value = genre;
+        renderCatalog();
+      }, 30);
+    }
+
+    function toggleFavorite(title) {
+      if (favorites.includes(title)) {
+        favorites = favorites.filter(x => x !== title);
+        showToast("Удалено из избранного");
+      } else {
+        favorites.push(title);
+        showToast("Добавлено в избранное");
+      }
+      localStorage.setItem("animeFavorites", JSON.stringify(favorites));
+      renderHome();
+      renderCatalog();
+      renderOngoing();
+      renderFavorites();
+      updateProfile();
+    }
+
+    function updateProfile() {
+      document.getElementById("profileAnimeCount").textContent = favorites.length;
+      document.getElementById("profileGrid").innerHTML = favorites.length
+        ? anime.filter(a => favorites.includes(a.title)).map(card).join("")
+        : `<div class="col-span-full text-sm text-zinc-500">Добавь аниме в избранное — они появятся здесь.</div>`;
+      lucide.createIcons();
+    }
+
+    function openAnime(title) {
+      const a = anime.find(x => x.title === title) || anime[0];
+      document.getElementById("modalContent").innerHTML = `
+        <div class="relative">
+          <button onclick="closeModal()" class="absolute z-10 top-4 right-4 w-10 h-10 rounded-full bg-black/60 backdrop-blur flex items-center justify-center border border-white/10">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+          <div class="h-72 sm:h-96 relative overflow-hidden">
+            <img src="${a.image}" class="w-full h-full object-cover opacity-60" alt="">
+            <div class="absolute inset-0 bg-gradient-to-t from-[#090b0e] via-transparent to-transparent"></div>
+          </div>
+          <div class="p-6 sm:p-8 -mt-24 relative">
+            <div class="flex flex-col sm:flex-row gap-6">
+              <img src="${a.image}" class="w-36 sm:w-44 aspect-[3/4] object-cover rounded-2xl border border-white/10 shadow-2xl" alt="${a.title}">
+              <div class="flex-1 pt-2">
+                <div class="text-[10px] uppercase tracking-[.2em] text-accent2">ANIME DETAIL</div>
+                <h2 class="text-3xl sm:text-4xl font-black mt-2">${a.title}</h2>
+                <div class="flex flex-wrap gap-2 mt-3 text-xs text-zinc-400">
+                  <span class="text-yellow-400">★ ${a.rating}/10</span>
+                  <span>${a.year}</span><span>${a.episodes} серий</span><span>12+</span>
+                </div>
+                <div class="flex flex-wrap gap-2 mt-3">${a.genres.map(g=>`<span class="rounded-lg bg-white/5 border border-white/10 px-2 py-1 text-xs text-zinc-400">${g}</span>`).join("")}</div>
+                <p class="mt-5 text-sm leading-7 text-zinc-400 max-w-2xl">${a.desc}</p>
+                <div class="flex gap-3 mt-6">
+                  <button onclick="showToast('Демо-плеер: серия 1');closeModal()" class="px-5 py-3 rounded-xl bg-white text-black text-sm font-bold flex items-center gap-2"><i data-lucide="play" class="w-4 h-4 fill-current"></i> Смотреть</button>
+                  <button onclick="toggleFavorite('${escapeQuotes(a.title)}')" class="px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-sm"><i data-lucide="heart" class="w-4 h-4"></i></button>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-10">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold">Серии</h3>
+                <span class="text-xs text-zinc-600">${Math.min(a.episodes,12)} доступно в демо</span>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                ${Array.from({length: Math.min(a.episodes,12)}, (_,i) =>
+                  `<button onclick="showToast('Запуск серии ${i+1}')" class="rounded-xl border border-white/10 bg-white/[.03] px-3 py-3 text-left hover:bg-white/[.07]">
+                    <div class="text-xs font-semibold">Серия ${i+1}</div>
+                    <div class="text-[10px] text-zinc-600 mt-1">${20+i}:2${i}</div>
+                  </button>`).join("")}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      document.getElementById("animeModal").classList.add("open");
+      lucide.createIcons();
+    }
+
+    function closeModal() {
+      document.getElementById("animeModal").classList.remove("open");
+    }
+
+    document.getElementById("animeModal").addEventListener("click", e => {
+      if (e.target.id === "animeModal") closeModal();
+    });
+
+    function searchAnime(value) {
+      const box = document.getElementById("searchResults");
+      const q = value.trim().toLowerCase();
+      if (!q) { box.classList.add("hidden"); return; }
+
+      const results = anime.filter(a => a.title.toLowerCase().includes(q)).slice(0,5);
+      box.innerHTML = results.length ? results.map(a => `
+        <button onclick="openAnime('${escapeQuotes(a.title)}');document.getElementById('searchResults').classList.add('hidden')" class="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 text-left">
+          <img src="${a.image}" class="w-10 h-12 rounded-lg object-cover" alt="">
+          <div class="min-w-0">
+            <div class="text-sm font-semibold truncate">${a.title}</div>
+            <div class="text-[10px] text-zinc-500">${a.year} • ★ ${a.rating}</div>
+          </div>
+        </button>
+      `).join("") : `<div class="p-4 text-xs text-zinc-500">Ничего не найдено.</div>`;
+      box.classList.remove("hidden");
+    }
+
+    document.addEventListener("click", e => {
+      const search = document.getElementById("searchInput");
+      const results = document.getElementById("searchResults");
+      if (!search.contains(e.target) && !results.contains(e.target)) results.classList.add("hidden");
+    });
+
+    function randomAnime() {
+      const a = anime[Math.floor(Math.random()*anime.length)];
+      openAnime(a.title);
+    }
+
+    function go(page) {
+      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+      const el = document.getElementById("page-" + page);
+      if (el) el.classList.add("active");
+
+      document.querySelectorAll(".nav-link").forEach(n => n.classList.toggle("active", n.dataset.page === page));
+      const labels = {
+        home:"Популярное", catalog:"Каталог", ongoing:"Онгоинги",
+        favorites:"Избранное", profile:"Профиль", settings:"Настройки"
+      };
+      document.getElementById("breadcrumb").textContent = labels[page] || "Аниме";
+      closeSidebar();
+      window.scrollTo({top:0, behavior:"smooth"});
+      lucide.createIcons();
+    }
+
+    function toggleSidebar() {
+      const sb = document.getElementById("sidebar");
+      const ov = document.getElementById("mobileOverlay");
+      sb.classList.toggle("-translate-x-full");
+      ov.classList.toggle("hidden");
+    }
+
+    function closeSidebar() {
+      if (window.innerWidth < 1024) {
+        document.getElementById("sidebar").classList.add("-translate-x-full");
+        document.getElementById("mobileOverlay").classList.add("hidden");
+      }
+    }
+    document.getElementById("mobileOverlay").onclick = closeSidebar;
+
+    function showToast(message) {
+      const t = document.getElementById("toast");
+      t.textContent = message;
+      t.classList.add("show");
+      clearTimeout(window.__toast);
+      window.__toast = setTimeout(() => t.classList.remove("show"), 2200);
+    }
+
+    function escapeQuotes(s) {
+      return s.replaceAll("\\", "\\\\").replaceAll("'", "\\'");
+    }
+
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!doctype html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Настройки — ANIME夢</title><script src="https://cdn.tailwindcss.com"></script>
+<style>
+body{background:#050607;color:#f4f5f7;font-family:Inter,system-ui,sans-serif}
+::-webkit-scrollbar{width:8px}::-webkit-scrollbar-track{background:#050607}::-webkit-scrollbar-thumb{background:#30343b;border-radius:99px}
+.card{transition:.25s}.card:hover{transform:translateY(-5px);box-shadow:0 15px 35px #0008}
+</style>
+</head><body>
+<header class="sticky top-0 z-50 h-16 border-b border-white/10 bg-[#050607]/90 backdrop-blur-xl">
+<div class="max-w-7xl mx-auto h-full px-4 flex items-center justify-between gap-4">
+<a href="index.html" class="font-black text-xl">ANIME<span class="text-red-500">夢</span></a>
+<nav class="hidden md:flex gap-5 text-sm text-zinc-400">
+<a href="index.html" class="hover:text-white">Главная</a>
+<a href="catalog.html" class="hover:text-white">Каталог</a>
+<a href="ongoing.html" class="hover:text-white">Онгоинги</a>
+<a href="favorites.html" class="hover:text-white">Избранное</a>
+<a href="profile.html" class="hover:text-white">Профиль</a>
+</nav>
+<div class="flex gap-2">
+<a href="login.html" class="px-4 py-2 rounded-xl border border-white/10 text-xs hover:bg-white/5">Войти</a>
+<a href="settings.html" class="w-9 h-9 rounded-xl border border-white/10 flex items-center justify-center">⚙</a>
+</div>
+</div></header>
+<main class="max-w-7xl mx-auto px-4 py-10">
+<h1 class="text-4xl font-black">Настройки</h1><p class="text-zinc-500 mt-2 mb-8">Настрой внешний вид и аккаунт.</p>
+<div class="max-w-3xl space-y-4">
+<div class="rounded-2xl border border-white/10 bg-[#0b0d10] p-6"><h2 class="font-bold">Интерфейс</h2>
+<label class="flex justify-between items-center py-4 border-b border-white/5"><span><b>Анимации</b><small class="block text-zinc-500 mt-1">Плавные переходы сайта</small></span><input type="checkbox" checked></label>
+<label class="flex justify-between items-center py-4"><span><b>Автовоспроизведение</b><small class="block text-zinc-500 mt-1">Следующая серия запускается автоматически</small></span><input type="checkbox"></label></div>
+<div class="rounded-2xl border border-white/10 bg-[#0b0d10] p-6"><h2 class="font-bold">Профиль</h2>
+<input class="w-full h-11 mt-4 rounded-xl bg-white/5 border border-white/10 px-3" value="Islomidze">
+<button onclick="alert('Настройки сохранены')" class="mt-4 px-5 py-2.5 rounded-xl bg-white text-black font-bold text-sm">Сохранить</button></div>
+</div>
+</main></body></html>
